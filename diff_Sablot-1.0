@@ -1,0 +1,65 @@
+--- ./os2/make-dll.cmd.orig	Mon Oct  6 19:35:50 2003
++++ ./os2/make-dll.cmd	Mon Oct  6 18:04:44 2003
+@@ -0,0 +1,27 @@
++rem One needs to: make "CC=gcc -Zmtd" |& tee 00m2
++
++rem Run at the root of the distribution, FOO.def-base.in should be in ./os2
++
++set _A=.lib
++
++rem THIS_DLL should match the name in os2/%THIS_LIB%.def-base; 8 chars max
++set THIS_DLL=sablotem
++set THIS_LIB=sablot
++set THIS_LIB_DIR=src/engine
++set LIBS=-lz -lsocket -liconv -lexpat
++
++sh config.status --file os2/%THIS_LIB%.def-base
++cp os2/%THIS_LIB%.def-base os2/%THIS_LIB%.def
++cp %THIS_LIB_DIR%/.libs/%THIS_LIB%%_A% os2/%THIS_LIB%-static%_A%
++if exist os2\xml2-static.a emxomf -p 128 os2/%THIS_LIB%-static.a
++emxexp os2/%THIS_LIB%-static.lib >>os2\%THIS_LIB%.def
++gcc -s -Zdll -Zomf -Zmtd -o os2/%THIS_DLL%.dll -Los2 -l%THIS_LIB%-static os2/%THIS_LIB%.def %LIBS%
++lxlite os2/%THIS_DLL%.dll
++emximp -o %THIS_LIB_DIR%/.libs/%THIS_LIB%-dyn.a   os2/%THIS_LIB%.def
++emximp -o %THIS_LIB_DIR%/.libs/%THIS_LIB%-dyn.lib os2/%THIS_LIB%.def
++
++echo To build test .exe files, rename
++echo ren %THIS_LIB_DIR%/.libs/%THIS_LIB%-dyn%_A% %THIS_LIB_DIR%/.libs/%THIS_LIB%%_A%
++echo and move DLLs in ./os2 to a directory on LIBPATH.
++echo Then remove .exe's, and rebuild like this (unless already -Zmtd or -Zcrtdll):
++echo make "CC=gcc -Zmtd -s"
+--- ./os2/sablot.def-base.in.orig	Mon Oct  6 19:35:44 2003
++++ ./os2/sablot.def-base.in	Mon Oct  6 17:53:16 2003
+@@ -0,0 +1,6 @@
++LIBRARY 'sablotem' INITINSTANCE TERMINSTANCE
++DESCRIPTION '@#www.gingerall.org/:@VERSION@#@XML processor fully implemented in C++.  Built for EMX -Zmtd'
++STACKSIZE 32768
++CODE LOADONCALL
++DATA LOADONCALL NONSHARED MULTIPLE
++EXPORTS
+--- ./src/engine/platform.cpp-pre	Wed Jul 16 04:29:08 2003
++++ ./src/engine/platform.cpp	Mon Oct  6 17:35:08 2003
+@@ -100,6 +100,8 @@ int isinf__(double x)
+     return ! finite(x) && x == x;
+ #elif defined (WIN32)
+     return ! _finite(x) && x == x;
++#elif defined (__EMX__)
++    return ! isfinite(x) && x == x;
+ #else
+ #    error "Don't know how to detect Infinity on this platform"
+ #endif
+--- ./src/engine/platform.h-pre	Wed Jul 16 04:29:08 2003
++++ ./src/engine/platform.h	Mon Oct  6 17:43:54 2003
+@@ -89,7 +89,11 @@ void my_getcwd(DStr &dir);
+ #define snprintf _snprintf
+ #define strncasecmp _strnicmp
+ #else
+-#include <strings.h>		// definition of strncasecmp
++#  if defined (__EMX__)
++#    define strncasecmp strnicmp
++#  else
++#    include <strings.h>		// definition of strncasecmp
++#  endif
+ #endif
+ 
+ //pointer arithmetics

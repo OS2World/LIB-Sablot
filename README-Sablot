@@ -1,0 +1,32 @@
+OS/2 EMX -Zmtd build of Sablot library v1.0 for parsing of HTML.
+Requires ICONV.DLL and EXPAT.DLL.
+
+---------------------------------------------------  INSTALL Procedure
+
+Extract to d:/emx directory or an equivalent:
+
+  unzip Sablot-1-0.zip -d d:/emx
+
+One needs to edit the configuration files to correct /usr/local to the actual
+install directory.  One possible way (requires sh and perl): edit install_dir=
+line in
+
+ try-relocate.cmd
+
+(with the above example, it should be install_dir=d:/emx), then run the script.
+
+---------------------------------------------------  BUILD Procedure
+
+The Perl script convert_configure is available from ilyaz.org/software/os2.
+
+# Apply the patch diff_Sablot-1.0 in the build directory
+gnupatch -p1 < diff_Sablot-1.0
+convert_configure
+(sh configure && make && make tests) |& tee 00c1
+os2\make-dll.cmd
+
+---------------------------------------------------  Portability notes
+
+Uses #elif
+
+strncasecmp() and isfinite() are not detected.

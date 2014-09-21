@@ -13,8 +13,8 @@ COMPILE TOOLS
  
 AUTHORS
 ===============
-* 
+* Port: Ilya Zakharevich
 
 LINKS
 ===============
-* 
+* http://www.gingerall.org/
